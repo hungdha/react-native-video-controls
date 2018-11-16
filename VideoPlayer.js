@@ -3,6 +3,7 @@ import Video from 'react-native-video';
 import {
     TouchableWithoutFeedback,
     TouchableHighlight,
+    TouchableOpacity,
     ImageBackground,
     PanResponder,
     StyleSheet,
@@ -19,17 +20,18 @@ import _ from 'lodash';
 export default class VideoPlayer extends Component {
 
     static defaultProps = {
-        toggleResizeModeOnFullscreen:   true,
+        toggleResizeModeOnFullscreen:   false, // <- true
         playInBackground:               false,
         playWhenInactive:               false,
-        showOnStart:                    true,
+        showOnStart:                    false, // <- true
         resizeMode:                     'contain',
-        paused:                         false,
+        paused:                         true, // <- false
         repeat:                         false,
         volume:                         1,
         muted:                          false,
-        title:                          '',
+        title:                          'bjkjhkjh',
         rate:                           1,
+        hasReplay :                     false
     };
 
     constructor( props ) {
@@ -43,6 +45,7 @@ export default class VideoPlayer extends Component {
             // Video
             resizeMode: this.props.resizeMode,
             paused: this.props.paused,
+          
             muted: this.props.muted,
             volume: this.props.volume,
             rate: this.props.rate,
@@ -64,6 +67,7 @@ export default class VideoPlayer extends Component {
             currentTime: 0,
             error: false,
             duration: 0,
+            hasReplay : this.props.hasReplay
         };
 
         /**
@@ -228,7 +232,13 @@ export default class VideoPlayer extends Component {
      * Either close the video or go to a
      * new page.
      */
-    _onEnd() {}
+    _onEnd() {
+        console.log('the end video')
+        this.setState({
+            hasReplay : true,
+            paused : true
+        })
+    }
 
     /**
      * Set the error state to true which then
@@ -280,6 +290,8 @@ export default class VideoPlayer extends Component {
     */
 
     /**
+     * 
+     * 
      * Set a timeout when the controls are shown
      * that hides them after a length of time.
      * Default is 15s
@@ -1079,10 +1091,38 @@ export default class VideoPlayer extends Component {
                     ]} />
                 </View>
             );
-        }
-        return null;
+        }else
+            return this.renderStart();
     }
 
+    _replayVideo(){
+        this.seekTo(0);
+        this.setState({
+            paused : false,
+            hasReplay : false
+        })
+    }
+
+    renderStart(){
+        let source = this.state.paused == false ? require( './assets/img/pause-circle.png' ) : require( './assets/img/start.png' );
+        let source2 = require( './assets/img/replay.png');
+        
+        return (
+            
+            <View style={ styles.start.container }>
+                {
+                    this.state.hasReplay  ? 
+                        (<TouchableOpacity onPress={() => this._replayVideo() }>
+                                <Image source={ source2 } />
+                        </TouchableOpacity>)
+                        :
+                        (<TouchableOpacity onPress={() => this.setState({paused : !this.state.paused })}>
+                                <Image source={ source } />
+                        </TouchableOpacity>) 
+                }       
+            </View>
+        );
+    }
     renderError() {
         if ( this.state.error ) {
             return (
@@ -1101,6 +1141,7 @@ export default class VideoPlayer extends Component {
      * Provide all of our options and render the whole component.
      */
     render() {
+        console.log("state video media", this.state);
         return (
             <TouchableWithoutFeedback
                 onPress={ this.events.onScreenTouch }
@@ -1113,6 +1154,7 @@ export default class VideoPlayer extends Component {
 
                         resizeMode={ this.state.resizeMode }
                         volume={ this.state.volume }
+                       
                         paused={ this.state.paused }
                         muted={ this.state.muted }
                         rate={ this.state.rate }
@@ -1127,10 +1169,11 @@ export default class VideoPlayer extends Component {
 
                         source={ this.props.source }
                     />
-                    { this.renderError() }
-                    { this.renderTopControls() }
-                    { this.renderLoader() }
-                    { this.renderBottomControls() }
+                    { /*this.renderError() */ }
+                    { /*this.renderTopControls()*/ }
+                    { this.renderLoader() } 
+                 
+                    {  /*this.renderBottomControls()*/ }
                 </View>
             </TouchableWithoutFeedback>
         );
@@ -1143,6 +1186,13 @@ export default class VideoPlayer extends Component {
  * And then there's volume/seeker styles.
  */
 const styles = {
+    start: StyleSheet.create({
+        container:{
+            position:'absolute',
+            top : '40%',
+            left: '40%'
+        }
+    }),
     player: StyleSheet.create({
         container: {
             backgroundColor: '#000',
